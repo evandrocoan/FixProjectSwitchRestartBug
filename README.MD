@@ -22,3 +22,16 @@ views are called with the wrong `view`, then we need to call `plugin_loaded()` t
 all the correct views (including the cloned ones) to apply the scroll fix for the bug
 https://github.com/SublimeTextIssues/Core/issues/1379.
 
+
+___
+## Licence
+
+All files in this repository are released under GNU General Public License v3.0
+or the latest version available on http://www.gnu.org/licenses/gpl.html
+
+1. The [LICENSE](LICENSE) file for the GPL v3.0 license
+1. The website https://www.gnu.org/licenses/gpl-3.0.en.html
+
+For more information.
+
+
