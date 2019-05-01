@@ -1,0 +1,6 @@
+[
+    {
+        "caption": "FixProjectSwitchRestartBug: Restoring Views Scrolling",
+        "command": "force_restoring_views_scrolling",
+    },
+]
