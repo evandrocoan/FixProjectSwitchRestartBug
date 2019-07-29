@@ -1,4 +1,4 @@
-# Sublime Text Shell Script
+# Fix Project Switch Restart Bug
 
 
 Fix some Sublime Text sections issues as does not set the last scroll position after a project change.
