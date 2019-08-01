@@ -4,10 +4,10 @@
 import sublime
 import sublime_plugin
 
+MAXIMUM_CYCLES = 50
 
 isCurrentlySwitching = False
 last_focused_goto_definition = False
-
 
 
 class ForceRestoringViewsScrollingCommand( sublime_plugin.TextCommand ):
@@ -23,7 +23,7 @@ def fix_all_views_scroll():
 
     if not isCurrentlySwitching:
         isCurrentlySwitching = True
-        __windows            = sublime.windows()
+        __windows            = sublime.windows()[:MAXIMUM_CYCLES]
 
         windows      = []
         activeViews  = []
@@ -32,7 +32,7 @@ def fix_all_views_scroll():
         for window in __windows:
             windows.append( window )
             activeViews.append( window.active_view() )
-            windowsViews.append( window.views() )
+            windowsViews.append( window.views()[:MAXIMUM_CYCLES] )
 
         def revealWindow():
             global isCurrentlySwitching
@@ -63,11 +63,11 @@ def fix_all_views_scroll():
 
 def fix_all_views_scroll2():
     views         = None
-    windows       = sublime.windows()
+    windows       = sublime.windows()[:MAXIMUM_CYCLES]
     # currentViewId = 0
 
     for window in windows:
-        views         = window.views()
+        views         = window.views()[:MAXIMUM_CYCLES]
         # currentViewId = window.active_view().id()
 
         for view in views:
@@ -170,7 +170,7 @@ def fix_all_views_scrollSwitch():
 
         activeWindows.append( __window )
         activeViews.append( __window.active_view() )
-        windowsViews.append( __window.views() )
+        windowsViews.append( __window.views()[:MAXIMUM_CYCLES] )
 
         def revealWindow():
 
@@ -202,10 +202,10 @@ def fix_all_views_scrollSwitch():
 def fix_all_views_scrollSwitch2():
 
     views         = None
-    windows       = sublime.windows()
+    windows       = sublime.windows()[:MAXIMUM_CYCLES]
     # currentViewId = 0
 
-    views         = sublime.active_window().views()
+    views         = sublime.active_window().views()[:MAXIMUM_CYCLES]
     # currentViewId = window.active_view().id()
 
     for view in views:
