@@ -4,6 +4,8 @@
 import sublime
 import sublime_plugin
 
+import time
+
 MAXIMUM_CYCLES = 50
 
 isCurrentlySwitching = False
@@ -41,7 +43,7 @@ def fix_all_views_scroll():
 
                 if( len( windowsViews[-1] ) > 0 ):
                     revealView( windows[-1], windowsViews[-1].pop() )
-                    sublime.set_timeout( revealWindow, 25 );
+                    sublime.set_timeout( revealWindow, 100 );
 
                 else:
                     # Restore the original active view.
@@ -53,11 +55,11 @@ def fix_all_views_scroll():
                     windowsViews.pop()
 
                     while view.is_loading():
-                        sleep(0.1)
+                        time.sleep(0.2)
 
                     revealView( window, view )
 
-        sublime.set_timeout( revealWindow, 100 )
+        sublime.set_timeout( revealWindow, 200 )
 
 
 
@@ -75,7 +77,7 @@ def fix_all_views_scroll2():
             # if currentViewId != view.id():
 
             while view.is_loading():
-                sleep(0.1)
+                time.sleep(0.1)
 
             restore_view( view )
 
