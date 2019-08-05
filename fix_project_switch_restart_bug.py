@@ -43,7 +43,7 @@ def fix_all_views_scroll():
 
                 if( len( windowsViews[-1] ) > 0 ):
                     revealView( windows[-1], windowsViews[-1].pop() )
-                    sublime.set_timeout( revealWindow, 100 );
+                    sublime.set_timeout( revealWindow, 25 );
 
                 else:
                     # Restore the original active view.
@@ -77,7 +77,7 @@ def fix_all_views_scroll2():
             # if currentViewId != view.id():
 
             while view.is_loading():
-                time.sleep(0.1)
+                time.sleep(0.2)
 
             restore_view( view )
 
@@ -183,7 +183,7 @@ def fix_all_views_scrollSwitch():
                 if( len( windowsViews[-1] ) > 0 ):
 
                     revealView( activeWindows[-1], windowsViews[-1].pop() )
-                    sublime.set_timeout( revealWindow, 25 );
+                    sublime.set_timeout( revealWindow, 100 );
 
                 else:
 
@@ -197,7 +197,7 @@ def fix_all_views_scrollSwitch():
                     windowsViews.pop()
                     revealView( window, view )
 
-        sublime.set_timeout( revealWindow, 50 )
+        sublime.set_timeout( revealWindow, 200 )
 
 
 
