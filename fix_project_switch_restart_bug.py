@@ -43,7 +43,7 @@ def fix_all_views_scroll():
 
                 if( len( windowsViews[-1] ) > 0 ):
                     revealView( windows[-1], windowsViews[-1].pop() )
-                    sublime.set_timeout( revealWindow, 25 );
+                    sublime.set_timeout( revealWindow, 100 );
 
                 else:
                     # Restore the original active view.
