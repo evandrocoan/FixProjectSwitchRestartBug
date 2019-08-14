@@ -4,6 +4,7 @@
 import sublime
 import sublime_plugin
 
+import threading
 import time
 
 MAXIMUM_CYCLES = 50
@@ -15,9 +16,7 @@ last_focused_goto_definition = False
 class ForceRestoringViewsScrollingCommand( sublime_plugin.TextCommand ):
 
     def run( self, edit ):
-        fix_all_views_scroll()
-        sublime.set_timeout( fix_all_views_scroll2, 2000 )
-
+        threading.Thread( target=fix_all_views_scroll ).start()
 
 
 def fix_all_views_scroll():
@@ -59,39 +58,15 @@ def fix_all_views_scroll():
 
                     revealView( window, view )
 
+                    # To do the second row of fixes
+                    sublime.set_timeout( fix_all_views_scroll_hidden, 2000 )
+
         sublime.set_timeout( revealWindow, 200 )
-
-
-
-def fix_all_views_scroll2():
-    views         = None
-    windows       = sublime.windows()[:MAXIMUM_CYCLES]
-    # currentViewId = 0
-
-    for window in windows:
-        views         = window.views()[:MAXIMUM_CYCLES]
-        # currentViewId = window.active_view().id()
-
-        for view in views:
-            # print( "( fix_all_views_scroll2 ) View id {0}, buffer id {1}".format( view.id(), view.buffer_id() ) )
-            # if currentViewId != view.id():
-
-            while view.is_loading():
-                time.sleep(0.2)
-
-            restore_view( view )
 
 
 def revealView( window, view ):
     window.focus_view( view )
     restore_view( view )
-
-
-def plugin_loaded():
-    # print( "( plugin_loaded ) fix_project_switch_restart_bug.py" )
-
-    sublime.set_timeout( fix_all_views_scroll, 1000 )
-    sublime.set_timeout( fix_all_views_scroll2, 5000 )
 
 
 def restore_view( view ):
@@ -109,6 +84,24 @@ def restore_view( view ):
     except Exception:
         pass
 
+
+def fix_all_views_scroll_hidden():
+    views         = None
+    windows       = sublime.windows()[:MAXIMUM_CYCLES]
+    # currentViewId = 0
+
+    for window in windows:
+        views         = window.views()[:MAXIMUM_CYCLES]
+        # currentViewId = window.active_view().id()
+
+        for view in views:
+            # print( "( fix_all_views_scroll_hidden ) View id {0}, buffer id {1}".format( view.id(), view.buffer_id() ) )
+            # if currentViewId != view.id():
+
+            while view.is_loading():
+                time.sleep(0.2)
+
+            restore_view( view )
 
 
 def are_we_on_the_project_switch_process():
@@ -132,17 +125,24 @@ def are_we_on_the_project_switch_process():
     return False
 
 
-
 def run_delayed_fix():
-    sublime.set_timeout( fix_all_views_scrollSwitch, 2000 )
-    sublime.set_timeout( fix_all_views_scrollSwitch2, 5000 )
+    sublime.active_window().run_command( 'force_restoring_views_scrolling' )
 
 
+def plugin_loaded():
+    # print( "( plugin_loaded ) fix_project_switch_restart_bug.py" )
+    sublime.set_timeout( lambda: run_delayed_fix(), 3000 )
 
-class OnLoadedViewCommand( sublime_plugin.EventListener ):
+
+def unlockTheScrollRestoring():
+    global last_focused_goto_definition
+    last_focused_goto_definition = False
+
+
+class SampleListener( sublime_plugin.EventListener ):
 
     # def on_load( self, view ):
-    def on_load_async( self, view ):
+    def on_load( self, view ):
     # def on_activated( self, view ):
     # def on_activated_async( self, view ):
 
@@ -154,75 +154,6 @@ class OnLoadedViewCommand( sublime_plugin.EventListener ):
         # print( "( fix_project_switch_restart_bug.py ) Calling restore_view, view id {0}".format( view.id() ) )
         if not are_we_on_the_project_switch_process():
             restore_view( view )
-
-
-
-isCurrentlySwitchingSwitch = False
-
-def fix_all_views_scrollSwitch():
-    global isCurrentlySwitchingSwitch
-
-    if not isCurrentlySwitchingSwitch:
-        isCurrentlySwitchingSwitch = True
-        __window                   = sublime.active_window()
-
-        windowsViews  = []
-        activeViews   = []
-        activeWindows = []
-
-        activeWindows.append( __window )
-        activeViews.append( __window.active_view() )
-        windowsViews.append( __window.views()[:MAXIMUM_CYCLES] )
-
-        def revealWindow():
-
-            global isCurrentlySwitchingSwitch
-
-            if( len( windowsViews ) > 0 ):
-
-                if( len( windowsViews[-1] ) > 0 ):
-
-                    revealView( activeWindows[-1], windowsViews[-1].pop() )
-                    sublime.set_timeout( revealWindow, 100 );
-
-                else:
-
-                    # Restore the original active view.
-                    view   = activeViews.pop()
-                    window = activeWindows.pop()
-
-                    # Allow new switching fixes.
-                    isCurrentlySwitchingSwitch = False
-
-                    windowsViews.pop()
-                    revealView( window, view )
-
-        sublime.set_timeout( revealWindow, 200 )
-
-
-
-def fix_all_views_scrollSwitch2():
-
-    views         = None
-    windows       = sublime.windows()[:MAXIMUM_CYCLES]
-    # currentViewId = 0
-
-    views         = sublime.active_window().views()[:MAXIMUM_CYCLES]
-    # currentViewId = window.active_view().id()
-
-    for view in views:
-        # print( "( fix_all_views_scroll2 ) View id {0}, buffer id {1}".format( view.id(), view.buffer_id() ) )
-        # if currentViewId != view.id():
-        restore_view( view )
-
-
-
-def unlockTheScrollRestoring():
-    global last_focused_goto_definition
-    last_focused_goto_definition = False
-
-
-class SampleListener( sublime_plugin.EventListener ):
 
     def on_window_command( self, window, command, args ):
 
@@ -237,8 +168,4 @@ class SampleListener( sublime_plugin.EventListener ):
             last_focused_goto_definition = True
 
             sublime.set_timeout( unlockTheScrollRestoring, 10000 )
-
-
-
-
 
