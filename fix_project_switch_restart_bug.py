@@ -32,7 +32,10 @@ except ImportError as error:
 class StateMeta(type):
 
     def __init__(cls, *args, **kwargs):
+        cls.last_on_load_time = None
+
         cls._is_currently_switching = False
+        cls._has_opened_the_project_switch_panel = False
 
     @property
     def is_currently_switching(cls):
@@ -43,6 +46,15 @@ class StateMeta(type):
         cls._is_currently_switching = value
         MaxPane.max_pane.State.disable_timeout = value
 
+    @property
+    def has_opened_the_project_switch_panel(cls):
+        return cls._has_opened_the_project_switch_panel
+
+    @has_opened_the_project_switch_panel.setter
+    def has_opened_the_project_switch_panel(cls, value):
+        cls.last_on_load_time = None
+        cls._has_opened_the_project_switch_panel = value
+
 
 class State(metaclass=StateMeta):
     has_opened_the_project_switch_panel = False
@@ -50,9 +62,9 @@ class State(metaclass=StateMeta):
 
 class ForceRestoringViewsScrollingCommand(sublime_plugin.TextCommand):
 
-    def run( self, edit, active_window=False ):
-        print( "Fixing all views scrolling... All windows", not active_window )
-        sublime.set_timeout( lambda: fix_all_views_scroll( active_window ) )
+    def run(self, edit, active_window_only, source_event):
+        print( "Fixing all views scrolling... active_window_only", active_window_only, "source_event", source_event )
+        sublime.set_timeout( lambda: fix_all_views_scroll( active_window_only ), TIME_AFTER_START_RUNNING )
 
 
 def set_read_only(window, views):
@@ -80,11 +92,11 @@ def set_read_only(window, views):
     return list( sorted( fixed_views, key=lambda item: item[1] ) ), active_views
 
 
-def fix_all_views_scroll(active_window):
+def fix_all_views_scroll(active_window_only):
 
     if not State.is_currently_switching:
         State.is_currently_switching = True
-        generator = view_generator( active_window )
+        generator = view_generator( active_window_only )
 
         def recursive_reveal():
 
@@ -126,11 +138,11 @@ def fix_all_views_scroll(active_window):
                 State.is_currently_switching = False
                 # print( "Finished restoring focus..." )
 
-        sublime.set_timeout( recursive_reveal, TIME_AFTER_START_RUNNING )
+        recursive_reveal()
 
 
-def view_generator(active_window):
-    windows = [ sublime.active_window() ] if active_window else sublime.windows()[:MAXIMUM_CYCLES]
+def view_generator(active_window_only):
+    windows = [ sublime.active_window() ] if active_window_only else sublime.windows()[:MAXIMUM_CYCLES]
 
     for window in windows:
         active_group = window.active_group()
@@ -240,31 +252,18 @@ def view_generator_hidden(window, group):
         yield view, window
 
 
-def are_we_on_the_project_switch_process():
-    """
-        Call `plugin_loaded()` only one time, after the project switch process is finished.
-
-        Restrictions:
-            1. We cannot call `plugin_loaded()` if this function is called only one time.
-            2. If this function is called consequently 2 times with less than 0.1 seconds, then we
-               must to return True.
-    """
-
-    # If we are on the seconds of listening period after the command `prompt_select_workspace`
-    # being run, we know we probably switching projects. Therefore, schedules the project fix.
-    if State.has_opened_the_project_switch_panel:
-        State.has_opened_the_project_switch_panel = False
-        run_delayed_fix( True )
-
-    return False
-
-
-def run_delayed_fix(active_window):
-    sublime.active_window().run_command( 'force_restoring_views_scrolling', { 'active_window': active_window } )
+def run_delayed_fix(active_window_only, window, source_event):
+    window.run_command(
+            'force_restoring_views_scrolling', {
+                'active_window_only': active_window_only,
+                'source_event': source_event,
+            }
+        )
 
 
 def plugin_loaded():
-    sublime.set_timeout( lambda: run_delayed_fix( False ), 3000 )
+    pass
+    run_delayed_fix( False, sublime.active_window(), 'plugin_loaded' )
 
 
 def unlockTheScrollRestoring():
@@ -274,19 +273,28 @@ def unlockTheScrollRestoring():
 class SampleListener( sublime_plugin.EventListener ):
 
     def on_load( self, view ):
+        # print( "on_load", view.file_name() if view.file_name() else repr( view.substr( sublime.Region( 0, 100 ) ) ) )
 
-        # print( "( fix_project_switch_restart_bug.py ) Calling restore_view, view id {0}".format( view.id() ) )
-        if not are_we_on_the_project_switch_process():
-            restore_view( view, window, lambda: None )
+        if State.has_opened_the_project_switch_panel:
+            load_time = time.time()
+            last_on_load_time = State.last_on_load_time
+
+            if last_on_load_time and load_time - last_on_load_time < 0.5:
+                State.has_opened_the_project_switch_panel = False
+
+                window = view.window() or sublime.active_window()
+                run_delayed_fix( True, window, 'on_load' )
+
+            else:
+                State.last_on_load_time = time.time()
 
     def on_window_command( self, window, command, args ):
-        # print( "About to execute " + command )
+        # print( "command", command, args )
 
         if command == "open_recent_project_or_workspace":
-            run_delayed_fix( True )
+            run_delayed_fix( True, window, 'open_recent_project_or_workspace' )
 
         elif command == "prompt_select_workspace":
             State.has_opened_the_project_switch_panel = True
-
-            sublime.set_timeout( unlockTheScrollRestoring, 10000 )
+            sublime.set_timeout( unlockTheScrollRestoring, 60000 )
 

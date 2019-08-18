@@ -14,7 +14,12 @@
                 ]
             },
             { "caption": "-", "id": "restore-scrool-view" },
-            { "caption": "Restoring Views Scrolling", "command": "force_restoring_views_scrolling" },
+            { "caption": "Restoring Views Scrolling", "command": "force_restoring_views_scrolling",
+                "args": {
+                    "active_window_only": true,
+                    "source_event": "main_menu",
+                },
+            },
         ]
     },
 ]
