@@ -63,8 +63,14 @@ class State(metaclass=StateMeta):
 class ForceRestoringViewsScrollingCommand(sublime_plugin.TextCommand):
 
     def run(self, edit, active_window_only, source_event):
-        print( "Fixing all views scrolling... active_window_only", active_window_only, "source_event", source_event )
-        sublime.set_timeout( lambda: fix_all_views_scroll( active_window_only ), TIME_AFTER_START_RUNNING )
+
+        if State.is_currently_switching:
+            print( "Already fixing all views scrolling... active_window_only", active_window_only, "source_event", source_event )
+
+        else:
+            print( "Fixing all views scrolling... active_window_only", active_window_only, "source_event", source_event )
+            State.is_currently_switching = True
+            sublime.set_timeout( lambda: fix_all_views_scroll( active_window_only ), TIME_AFTER_START_RUNNING )
 
 
 def set_read_only(window, views):
@@ -93,52 +99,49 @@ def set_read_only(window, views):
 
 
 def fix_all_views_scroll(active_window_only):
+    generator = view_generator( active_window_only )
 
-    if not State.is_currently_switching:
-        State.is_currently_switching = True
-        generator = view_generator( active_window_only )
+    def recursive_reveal():
 
-        def recursive_reveal():
+        try:
+            view, group, window, end_of_group, start_of_group, active_view = next( generator )
+            file_name = view.file_name()
 
-            try:
-                view, group, window, end_of_group, start_of_group, active_view = next( generator )
-                file_name = view.file_name()
+            if not file_name: file_name = view.substr( sublime.Region( 0, 100 ) )
+            # print( "Fixing   window %s group %s view %s %s" % ( window.id(), group + 1, view.id(), repr( file_name) ) )
 
-                if not file_name: file_name = view.substr( sublime.Region( 0, 100 ) )
-                # print( "Fixing   window %s group %s view %s %s" % ( window.id(), group + 1, view.id(), repr( file_name) ) )
+            if start_of_group:
+                def do_start_of_group():
+                    window.focus_view( view )
 
-                if start_of_group:
-                    def do_start_of_group():
-                        window.focus_view( view )
-
-                        if end_of_group:
-                            next_target = lambda: fix_all_views_scroll_hidden( window, group, recursive_reveal )
-                            sublime.set_timeout( lambda: restore_view( view, window, next_target ), TIME_AFTER_FOCUS_VIEW )
-                        else:
-                            sublime.set_timeout( lambda: restore_view( view, window, recursive_reveal ), TIME_AFTER_FOCUS_VIEW )
-
-                    window.focus_group( group )
-                    sublime.set_timeout( do_start_of_group, TIME_AFTER_FOCUS_GROUP )
-
-                elif end_of_group:
-                    def focus_active_view():
-                        window.focus_view( active_view )
-
+                    if end_of_group:
                         next_target = lambda: fix_all_views_scroll_hidden( window, group, recursive_reveal )
-                        sublime.set_timeout( lambda: restore_view( active_view, window, next_target ), TIME_AFTER_FOCUS_VIEW )
+                        sublime.set_timeout( lambda: restore_view( view, window, next_target ), TIME_AFTER_FOCUS_VIEW )
+                    else:
+                        sublime.set_timeout( lambda: restore_view( view, window, recursive_reveal ), TIME_AFTER_FOCUS_VIEW )
 
-                    window.focus_view( view )
-                    sublime.set_timeout( lambda: restore_view( view, window, focus_active_view ), TIME_AFTER_FOCUS_VIEW )
+                window.focus_group( group )
+                sublime.set_timeout( do_start_of_group, TIME_AFTER_FOCUS_GROUP )
 
-                else:
-                    window.focus_view( view )
-                    sublime.set_timeout( lambda: restore_view( view, window, recursive_reveal ), TIME_AFTER_FOCUS_VIEW )
+            elif end_of_group:
+                def focus_active_view():
+                    window.focus_view( active_view )
 
-            except StopIteration:
-                State.is_currently_switching = False
-                # print( "Finished restoring focus..." )
+                    next_target = lambda: fix_all_views_scroll_hidden( window, group, recursive_reveal )
+                    sublime.set_timeout( lambda: restore_view( active_view, window, next_target ), TIME_AFTER_FOCUS_VIEW )
 
-        recursive_reveal()
+                window.focus_view( view )
+                sublime.set_timeout( lambda: restore_view( view, window, focus_active_view ), TIME_AFTER_FOCUS_VIEW )
+
+            else:
+                window.focus_view( view )
+                sublime.set_timeout( lambda: restore_view( view, window, recursive_reveal ), TIME_AFTER_FOCUS_VIEW )
+
+        except StopIteration:
+            State.is_currently_switching = False
+            # print( "Finished restoring focus..." )
+
+    recursive_reveal()
 
 
 def view_generator(active_window_only):
