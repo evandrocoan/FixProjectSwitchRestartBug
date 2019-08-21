@@ -105,10 +105,7 @@ def fix_all_views_scroll(active_window_only):
 
         try:
             view, group, window, end_of_group, start_of_group, active_view = next( generator )
-            file_name = view.file_name()
-
-            if not file_name: file_name = view.substr( sublime.Region( 0, 100 ) )
-            # print( "Fixing   window %s group %s view %s %s" % ( window.id(), group + 1, view.id(), repr( file_name) ) )
+            # print( "Fixing   window %s group %s view %s %s" % ( window.id(), group + 1, view.id(), repr( view.file_name() if view.file_name() else view.substr( sublime.Region( 0, 100 ) ) ) ) )
 
             if start_of_group:
                 def do_start_of_group():
