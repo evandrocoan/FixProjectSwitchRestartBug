@@ -189,7 +189,22 @@ def restore_view(view, window, next_target, withfocus=True):
             first_selection = selections[0].begin()
             original_selections = list( selections )
 
+            def super_refocus():
+                view.run_command( "move", {"by": "lines", "forward": False} )
+                view.run_command( "move", {"by": "lines", "forward": True} )
+
+                def fix_selections():
+                    selections.clear()
+
+                    for selection in original_selections:
+                        selections.add( selection )
+
+                    sublime.set_timeout( next_target, TIME_AFTER_RESTORE_VIEW )
+
+                sublime.set_timeout( fix_selections, TIME_AFTER_RESTORE_VIEW )
+
             if file_name and withfocus:
+
                 def reforce_focus():
                     # https://github.com/SublimeTextIssues/Core/issues/1482
                     group, view_index = window.get_view_index( view )
@@ -200,20 +215,6 @@ def restore_view(view, window, next_target, withfocus=True):
                     window.open_file( "%s:%d:%d" % ( file_name, row + 1, column + 1 ), sublime.ENCODED_POSITION )
                     window.set_view_index( view, group, view_index )
 
-                    def super_refocus():
-                        view.run_command( "move", {"by": "lines", "forward": False} )
-                        view.run_command( "move", {"by": "lines", "forward": True} )
-
-                        def fix_selections():
-                            selections.clear()
-
-                            for selection in original_selections:
-                                selections.add( selection )
-
-                            sublime.set_timeout( next_target, TIME_AFTER_RESTORE_VIEW )
-
-                        sublime.set_timeout( fix_selections, TIME_AFTER_RESTORE_VIEW )
-
                     sublime.set_timeout( super_refocus, TIME_AFTER_RESTORE_VIEW )
 
                 view.show_at_center( first_selection )
@@ -221,7 +222,7 @@ def restore_view(view, window, next_target, withfocus=True):
 
             else:
                 view.show_at_center( first_selection )
-                sublime.set_timeout( next_target, TIME_AFTER_RESTORE_VIEW )
+                sublime.set_timeout( super_refocus, TIME_AFTER_RESTORE_VIEW )
 
 
 def fix_all_views_scroll_hidden(window, group, next_target):
