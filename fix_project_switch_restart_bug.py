@@ -185,7 +185,7 @@ def restore_view(view, window, next_target, withfocus=True):
         selections = view.sel()
         file_name = view.file_name()
 
-        if selections:
+        if len( selections ):
             first_selection = selections[0].begin()
             original_selections = list( selections )
 
