@@ -12,6 +12,12 @@ TIME_AFTER_FOCUS_GROUP = 250
 TIME_AFTER_RESTORE_VIEW = 15
 TIME_AFTER_START_RUNNING = 2000
 
+enable_project_switch_event_listener = (
+    "prompt_select_workspace",
+    "prompt_switch_project_or_workspace",
+    "prompt_open_project_or_workspace",
+)
+
 
 try:
     # Do not import State directly to not break us in case the MaxPane.max_pane module is reloaded
@@ -296,7 +302,7 @@ class SampleListener( sublime_plugin.EventListener ):
         if command == "open_recent_project_or_workspace":
             run_delayed_fix( True, window, 'open_recent_project_or_workspace' )
 
-        elif command == "prompt_select_workspace":
+        elif command in enable_project_switch_event_listener:
             State.has_opened_the_project_switch_panel = True
             sublime.set_timeout( unlockTheScrollRestoring, 60000 )
 
