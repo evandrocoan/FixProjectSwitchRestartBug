@@ -62,6 +62,8 @@ class StateMeta(type):
         cls._has_opened_the_project_switch_panel = value
 
 
+# I am saving the state in this class because it is a royal pain in the ass to keep typing `global`
+# every time/everywhere I would like to use a global!
 class State(metaclass=StateMeta):
     has_opened_the_project_switch_panel = False
 
