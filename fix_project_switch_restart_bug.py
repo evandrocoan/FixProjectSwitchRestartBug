@@ -65,6 +65,7 @@ class StateMeta(type):
 # I am saving the state in this class because it is a royal pain in the ass
 # to keep typing `global` every time/everywhere I would like to use a global!
 class State(metaclass=StateMeta):
+    fixed_views = []
     has_opened_the_project_switch_panel = False
 
 
@@ -144,7 +145,12 @@ def fix_all_views_scroll(active_window_only):
 
         except StopIteration:
             State.is_currently_switching = False
+
             # print( "Finished restoring focus..." )
+            for view, group, is_read_only in State.fixed_views:
+
+                if not is_read_only:
+                    view.set_read_only( False )
 
     recursive_reveal()
 
@@ -156,16 +162,16 @@ def view_generator(active_window_only):
         active_group = window.active_group()
         views = window.views()[:MAXIMUM_CYCLES]
 
-        fixed_views, active_views = set_read_only( window, views )
+        State.fixed_views, active_views = set_read_only( window, views )
         last_group = None
 
-        for index, values in enumerate( fixed_views ):
+        for index, values in enumerate( State.fixed_views ):
             index += 1
             view, group, _ = values
             active_view = active_views[group]
 
-            if index < len( fixed_views ):
-                _, next_group, _ = fixed_views[index]
+            if index < len( State.fixed_views ):
+                _, next_group, _ = State.fixed_views[index]
 
             else:
                 next_group = group + 1
@@ -176,7 +182,7 @@ def view_generator(active_window_only):
             last_group = group
             yield view, group, window, end_of_group, start_of_group, active_view
 
-        for view, group, is_read_only in fixed_views:
+        for view, group, is_read_only in State.fixed_views:
 
             if not is_read_only:
                 view.set_read_only( False )
