@@ -78,8 +78,10 @@ class ForceRestoringViewsScrollingCommand(sublime_plugin.TextCommand):
 
         else:
             print( "Fixing all views scrolling... active_window_only", active_window_only, "source_event", source_event )
+            timeout = 100 if source_event == "keybinding" else TIME_AFTER_START_RUNNING
+
             State.is_currently_switching = True
-            sublime.set_timeout( lambda: fix_all_views_scroll( active_window_only ), TIME_AFTER_START_RUNNING )
+            sublime.set_timeout( lambda: fix_all_views_scroll( active_window_only ), timeout )
 
 
 def set_read_only(window, views):
@@ -269,16 +271,18 @@ def view_generator_hidden(window, group):
 
 
 def run_delayed_fix(active_window_only, window, source_event):
-    window.run_command(
-            'force_restoring_views_scrolling', {
-                'active_window_only': active_window_only,
-                'source_event': source_event,
-            }
-        )
+    auto_run = window.active_view().settings().get( "fix_project_switch_restart_bug.auto_run", False )
+
+    if auto_run:
+        window.run_command(
+                'force_restoring_views_scrolling', {
+                    'active_window_only': active_window_only,
+                    'source_event': source_event,
+                }
+            )
 
 
 def plugin_loaded():
-    pass
     run_delayed_fix( False, sublime.active_window(), 'plugin_loaded' )
 
 

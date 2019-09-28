@@ -1,0 +1,12 @@
+[
+    {
+        "keys": [
+            "shift+f9"
+        ],
+        "command": "force_restoring_views_scrolling",
+        "args": {
+            "active_window_only": true,
+            "source_event": "keybinding",
+        },
+    },
+]

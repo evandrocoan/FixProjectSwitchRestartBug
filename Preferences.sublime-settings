@@ -1,0 +1,4 @@
+{
+    // Automatically run when opening Sublime Text, or Swching a project, etc.
+    "fix_project_switch_restart_bug.auto_run": false,
+}

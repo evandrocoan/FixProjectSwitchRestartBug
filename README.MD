@@ -2,12 +2,14 @@
 
 
 Fix some Sublime Text sections issues as does not set the last scroll position after a project change.
-
-
 1. [SublimeTextIssues#1379](https://github.com/SublimeTextIssues/Core/issues/1379) Restore session, does not set the last scroll position after a project change, or sublime restart
 1. [BufferScroll#23](https://github.com/titoBouzout/BufferScroll/issues/23) Scroll sync doesn't work (ST3 3084)
 1. [SublimeTextStudio#26](https://github.com/evandrocoan/SublimeTextStudio/issues/26) Finish the package: Fix Project Switch-Restart Bug
 
+See:
+1. [Main.sublime-menu](Main.sublime-menu)
+1. [Default.sublime-commands](Default.sublime-commands)
+1. [Preferences.sublime-settings](Preferences.sublime-settings)
 
 Need to fix to the bug on the Sublime Text core, where all cloned views are called with the same
 view object. If we do not fix this here, it would set all the cloned views to the same
