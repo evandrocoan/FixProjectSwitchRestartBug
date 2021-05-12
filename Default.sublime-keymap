@@ -5,7 +5,7 @@
         ],
         "command": "force_restoring_views_scrolling",
         "args": {
-            "active_window_only": true,
+            "active_window_only": false,
             "source_event": "keybinding",
         },
     },
