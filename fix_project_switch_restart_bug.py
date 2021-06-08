@@ -158,7 +158,13 @@ def fix_all_views_scroll(active_window_only):
 
 
 def view_generator(active_window_only):
-    windows = [ sublime.active_window() ] if active_window_only else sublime.windows()[:MAXIMUM_CYCLES]
+    active_window = sublime.active_window()
+    if active_window_only:
+        windows = [ active_window ]
+    else:
+        windows = sublime.windows()[:MAXIMUM_CYCLES]
+        windows.remove(active_window)
+        windows.insert(0, active_window)
 
     for window in windows:
         active_group = window.active_group()
