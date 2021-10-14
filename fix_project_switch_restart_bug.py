@@ -314,13 +314,15 @@ class SampleListener( sublime_plugin.EventListener ):
             else:
                 State.last_on_load_time = time.time()
 
-    def on_window_command( self, window, command, args ):
-        # print( "command", command, args )
+    # # Disable it for now on Sublime Text 4 as it seems to have fixed the bug
+    # # And this fix is not working correctly anymore!
+    # def on_window_command( self, window, command, args ):
+    #     # print( "command", command, args )
 
-        if command == "open_recent_project_or_workspace":
-            run_delayed_fix( True, window, 'open_recent_project_or_workspace' )
+    #     if command == "open_recent_project_or_workspace":
+    #         run_delayed_fix( True, window, 'open_recent_project_or_workspace' )
 
-        elif command in enable_project_switch_event_listener:
-            State.has_opened_the_project_switch_panel = True
-            sublime.set_timeout( unlockTheScrollRestoring, 60000 )
+    #     elif command in enable_project_switch_event_listener:
+    #         State.has_opened_the_project_switch_panel = True
+    #         sublime.set_timeout( unlockTheScrollRestoring, 60000 )
 
